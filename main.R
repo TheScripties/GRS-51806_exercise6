@@ -13,5 +13,6 @@ library(sp)
 source('R/greenestMunicipality.R')
 
 # Then the actual commands
-landsatMunicipalities <- preprocessing()
-result <- calculation(landsatMunicipalities)
+MODIS.municipalities <- preprocessing()
+calculation.result <- calculation(MODIS.municipalities)
+visualization(calculation.result)

@@ -2,33 +2,30 @@
 # 2015-09-12
 
 preprocessing <- function() {
-  #download.file(url = "https://github.com/GeoScripting-WUR/VectorRaster/raw/gh-pages/data/MODIS.zip" , destfile = "data/MODIS.zip", method = 'auto')
-  #unzip(zipfile = "data/MODIS.zip" , exdir = "data." , overwrite = TRUE)
+  download.file(url = "https://github.com/GeoScripting-WUR/VectorRaster/raw/gh-pages/data/MODIS.zip" , destfile = "data/MODIS.zip", , quiet = TRUE, method = 'auto')
+  unzip(zipfile = "data/MODIS.zip" , exdir = "data." , overwrite = TRUE)
+  NLD.municipalities <- getData('GADM', country = 'NLD', level = 3)
+  
+  MODIS.data <- list.files(path = "data./", pattern = glob2rx('MOD*.grd'), full.names = TRUE)
+  MODIS.raster <- brick(MODIS.data)
+  MODIS.raster[MODIS.raster < 0] <- NA
 
-  MODISdata <- list.files(path = "data./", pattern = glob2rx('MOD*.grd'), full.names = TRUE)
-  landsat <- brick(MODISdata)
-  landsat[landsat < 0] <- NA
+  # Perform the coordinate transformation to WGS84
+  municipalities.CRS <- spTransform(NLD.municipalities, CRS(proj4string(MODIS.raster)))
+
+  MODIS.mask <- mask(MODIS.raster, municipalities.CRS)
+  MODIS.crop <- crop(MODIS.mask, municipalities.CRS)
   
-  # Define CRS object for RD projection
-  prj_string_RD <- CRS("+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +towgs84=565.2369,50.0087,465.658,-0.406857330322398,0.350732676542563,-1.8703473836068,4.0812 +units=m +no_defs")
-  # Perform the coordinate transformation from WGS84 to RD
-  landsatRD <- spTransform(landsat, prj_string_RD)
+  MODIS.municipalities <- c("MODIS.crop" = MODIS.crop, "municipalities.CRS" = municipalities.CRS)
   
-  NLDmunicipalities <- getData('GADM', country = 'NLD', level = 3)
-  
-  
-  #rasterMunicipalities <- rasterize(NLDmunicipalities, landsat, field = NLDmunicipalities$NAME_2, background = NA)
-  #plot(rasterMunicipalities) #DELETE LINE
-  #maskGreenness <- mask(landsat, )
-  extract(landsat, NLDmunicipalities, fun = 'mean', df = TRUE, sp = TRUE)
-  landsatMunicipalities <- c("landsat" = landsat, "municipalities" = rasterMunicipalities)
-  
-  return(landsatMunicipalities)
+  return(MODIS.municipalities)
 }
 
 calculation <- function(landsatMunicipalities) {
   January <- landsatMunicipalities$landsat[[1]]  
   August <- landsatMunicipalities$landsat[[8]]
+  
+  MODIS.NLD <- extract(MODIS, municipalitiesCRS, fun = mean, df = TRUE, sp = TRUE)
   
   meanYear <- mean(landsatMunicipalities$landsat)
   opar <- par(mfrow = c(2, 7))
