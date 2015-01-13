@@ -21,21 +21,24 @@ preprocessing <- function() {
   return(MODIS.municipalities)
 }
 
-calculation <- function(landsatMunicipalities) {
-  January <- landsatMunicipalities$landsat[[1]]  
-  August <- landsatMunicipalities$landsat[[8]]
+calculation <- function(MODIS.municipalities) {
+  January <- MODIS.municipalities$landsat[[1]]  
+  August <- MODIS.municipalities$landsat[[8]]
+  meanYear <- mean(MODIS.municipalities, na.rm = TRUE)
   
-  MODIS.NLD <- extract(MODIS, municipalitiesCRS, fun = mean, df = TRUE, sp = TRUE)
+  MODIS.jan <- extract(January, MODIS.municipalities, fun = mean, df = TRUE, sp = TRUE)
+  MODIS.aug <- extract(August, MODIS.municipalities, fun = mean, df = TRUE, sp = TRUE)
+  MODIS.year <- extract(meanYear, MODIS.municipalities, fun = mean, df = TRUE, sp = TRUE)
   
-  meanYear <- mean(landsatMunicipalities$landsat)
+  
+}
+  
+visualization <- function () {}
+  
   opar <- par(mfrow = c(2, 7))
   plot(landsatMunicipalities$landsat)
   plot(meanYear)
   par(opar)
-  
-  jan
-  
-  aug
   
   
   greenness <- c()
